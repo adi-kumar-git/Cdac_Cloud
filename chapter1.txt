@@ -1,0 +1,119 @@
+
+Copy code
+git fetch origin
+Merge the fetched data into your local branch.
+sh
+Copy code
+git merge origin/main
+Or simply use:
+sh
+Copy code
+git pull origin main
+These commands will ensure that your local repository is up to date with the remote repository.
+
+
+
+
+
+5519)
+
+HP@DESKTOP-987VVUU MINGW64 ~/Videos/NewNoval (main)
+$ cat ~/.ssh/id_ed25519.pub
+ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIIR6vRrQtiyfRDJUG53rOkChcECbTU2gbfX8uB/EygYT adi4989.ak@gmail.com
+
+HP@DESKTOP-987VVUU MINGW64 ~/Videos/NewNoval (main)
+$ git remote -v
+
+HP@DESKTOP-987VVUU MINGW64 ~/Videos/NewNoval (main)
+$ cat ~/.ssh/id_ed25519.pub
+ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIIR6vRrQtiyfRDJUG53rOkChcECbTU2gbfX8uB/EygYT adi4989.ak@gmail.com
+
+HP@DESKTOP-987VVUU MINGW64 ~/Videos/NewNoval (main)
+$ git remote -v
+
+HP@DESKTOP-987VVUU MINGW64 ~/Videos/NewNoval (main)
+$ git remote
+
+HP@DESKTOP-987VVUU MINGW64 ~/Videos/NewNoval (main)
+$ ls
+chapter1.txt  chapter2.txt  chapter3.txt
+
+HP@DESKTOP-987VVUU MINGW64 ~/Videos/NewNoval (main)
+$  git remote add origin https://github.com/Sniper00001/Git_Demo.git
+
+HP@DESKTOP-987VVUU MINGW64 ~/Videos/NewNoval (main)
+$ git remote -v
+origin  https://github.com/Sniper00001/Git_Demo.git (fetch)
+origin  https://github.com/Sniper00001/Git_Demo.git (push)
+
+HP@DESKTOP-987VVUU MINGW64 ~/Videos/NewNoval (main)
+$ git branch
+* main
+
+HP@DESKTOP-987VVUU MINGW64 ~/Videos/NewNoval (main)
+$ git push origin main
+To https://github.com/Sniper00001/Git_Demo.git
+ ! [rejected]        main -> main (fetch first)
+error: failed to push some refs to 'https://github.com/Sniper00001/Git_Demo.git'
+hint: Updates were rejected because the remote contains work that you do not
+hint: have locally. This is usually caused by another repository pushing to
+hint: the same ref. If you want to integrate the remote changes, use
+hint: 'git pull' before pushing again.
+hint: See the 'Note about fast-forwards' in 'git push --help' for details.
+
+HP@DESKTOP-987VVUU MINGW64 ~/Videos/NewNoval (main)
+$ gi status
+bash: gi: command not found
+
+HP@DESKTOP-987VVUU MINGW64 ~/Videos/NewNoval (main)
+$ git status
+On branch main
+nothing to commit, working tree clean
+
+HP@DESKTOP-987VVUU MINGW64 ~/Videos/NewNoval (main)
+$ git fetch origin
+remote: Enumerating objects: 3, done.
+remote: Counting objects: 100% (3/3), done.
+remote: Total 3 (delta 0), reused 0 (delta 0), pack-reused 0
+Unpacking objects: 100% (3/3), 896 bytes | 52.00 KiB/s, done.
+From https://github.com/Sniper00001/Git_Demo
+ * [new branch]      main       -> origin/main
+
+HP@DESKTOP-987VVUU MINGW64 ~/Videos/NewNoval (main)
+$ git push origin main
+To https://github.com/Sniper00001/Git_Demo.git
+ ! [rejected]        main -> main (non-fast-forward)
+error: failed to push some refs to 'https://github.com/Sniper00001/Git_Demo.git'
+hint: Updates were rejected because the tip of your current branch is behind
+hint: its remote counterpart. If you want to integrate the remote changes,
+hint: use 'git pull' before pushing again.
+hint: See the 'Note about fast-forwards' in 'git push --help' for details.
+
+HP@DESKTOP-987VVUU MINGW64 ~/Videos/NewNoval (main)
+$ git pull origin main
+From https://github.com/Sniper00001/Git_Demo
+ * branch            main       -> FETCH_HEAD
+fatal: refusing to merge unrelated histories
+
+HP@DESKTOP-987VVUU MINGW64 ~/Videos/NewNoval (main)
+$ git push origin main
+To https://github.com/Sniper00001/Git_Demo.git
+ ! [rejected]        main -> main (non-fast-forward)
+error: failed to push some refs to 'https://github.com/Sniper00001/Git_Demo.git'
+hint: Updates were rejected because the tip of your current branch is behind
+hint: its remote counterpart. If you want to integrate the remote changes,
+hint: use 'git pull' before pushing again.
+hint: See the 'Note about fast-forwards' in 'git push --help' for details.
+
+HP@DESKTOP-987VVUU MINGW64 ~/Videos/NewNoval (main)
+$ git push origin main
+To https://github.com/Sniper00001/Git_Demo.git
+ ! [rejected]        main -> main (non-fast-forward)
+error: failed to push some refs to 'https://github.com/Sniper00001/Git_Demo.git'
+hint: Updates were rejected because the tip of your current branch is behind
+hint: its remote counterpart. If you want to integrate the remote changes,
+hint: use 'git pull' before pushing again.
+hint: See the 'Note about fast-forwards' in 'git push --help' for details.
+
+HP@DESKTOP-987VVUU MINGW64 ~/Videos/NewNoval (main)
+ why there is an error
