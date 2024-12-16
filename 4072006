@@ -1,0 +1,510 @@
+{
+  "nbformat": 4,
+  "nbformat_minor": 0,
+  "metadata": {
+    "colab": {
+      "provenance": [],
+      "gpuType": "T4"
+    },
+    "kernelspec": {
+      "name": "python3",
+      "display_name": "Python 3"
+    },
+    "language_info": {
+      "name": "python"
+    },
+    "accelerator": "GPU"
+  },
+  "cells": [
+    {
+      "cell_type": "code",
+      "source": [
+        "pip uninstall fitz"
+      ],
+      "metadata": {
+        "colab": {
+          "base_uri": "https://localhost:8080/"
+        },
+        "id": "K5uHHM0RD76m",
+        "outputId": "4af1e917-d599-4fbd-d5de-6f05a99e12ca"
+      },
+      "execution_count": 6,
+      "outputs": [
+        {
+          "output_type": "stream",
+          "name": "stdout",
+          "text": [
+            "\u001b[33mWARNING: Skipping fitz as it is not installed.\u001b[0m\u001b[33m\n",
+            "\u001b[0m"
+          ]
+        }
+      ]
+    },
+    {
+      "cell_type": "code",
+      "source": [
+        "pip install pymupdf"
+      ],
+      "metadata": {
+        "colab": {
+          "base_uri": "https://localhost:8080/"
+        },
+        "id": "OgPC8btqD-Th",
+        "outputId": "3500e6e4-ac91-4dc9-c94e-70dea96cb87e"
+      },
+      "execution_count": 7,
+      "outputs": [
+        {
+          "output_type": "stream",
+          "name": "stdout",
+          "text": [
+            "Requirement already satisfied: pymupdf in /usr/local/lib/python3.10/dist-packages (1.25.0)\n"
+          ]
+        }
+      ]
+    },
+    {
+      "cell_type": "code",
+      "source": [
+        "import fitz\n",
+        "print(fitz.__doc__)"
+      ],
+      "metadata": {
+        "colab": {
+          "base_uri": "https://localhost:8080/"
+        },
+        "id": "LDCAuA7nEB0X",
+        "outputId": "3381768a-cb2b-4433-b2da-2684b8b7edde"
+      },
+      "execution_count": 8,
+      "outputs": [
+        {
+          "output_type": "stream",
+          "name": "stdout",
+          "text": [
+            "PyMuPDF 1.25.0: Python bindings for the MuPDF 1.25.1 library (rebased implementation).\n",
+            "Python 3.10 running on linux (64-bit).\n",
+            "\n"
+          ]
+        }
+      ]
+    },
+    {
+      "cell_type": "code",
+      "source": [
+        "!pip install gtts\n",
+        "import fitz\n",
+        "import xml.etree.ElementTree as ET\n",
+        "from gtts import gTTS\n",
+        "import os\n",
+        "import nltk\n",
+        "from nltk.corpus import stopwords\n",
+        "from nltk.tokenize import word_tokenize, sent_tokenize\n",
+        "from math import floor"
+      ],
+      "metadata": {
+        "colab": {
+          "base_uri": "https://localhost:8080/"
+        },
+        "id": "0b1BFrgQAU2l",
+        "outputId": "a381f7e5-aa69-47a2-cd4e-02aa69bfd560"
+      },
+      "execution_count": 9,
+      "outputs": [
+        {
+          "output_type": "stream",
+          "name": "stdout",
+          "text": [
+            "Requirement already satisfied: gtts in /usr/local/lib/python3.10/dist-packages (2.5.4)\n",
+            "Requirement already satisfied: requests<3,>=2.27 in /usr/local/lib/python3.10/dist-packages (from gtts) (2.32.3)\n",
+            "Requirement already satisfied: click<8.2,>=7.1 in /usr/local/lib/python3.10/dist-packages (from gtts) (8.1.7)\n",
+            "Requirement already satisfied: charset-normalizer<4,>=2 in /usr/local/lib/python3.10/dist-packages (from requests<3,>=2.27->gtts) (3.4.0)\n",
+            "Requirement already satisfied: idna<4,>=2.5 in /usr/local/lib/python3.10/dist-packages (from requests<3,>=2.27->gtts) (3.10)\n",
+            "Requirement already satisfied: urllib3<3,>=1.21.1 in /usr/local/lib/python3.10/dist-packages (from requests<3,>=2.27->gtts) (2.2.3)\n",
+            "Requirement already satisfied: certifi>=2017.4.17 in /usr/local/lib/python3.10/dist-packages (from requests<3,>=2.27->gtts) (2024.8.30)\n"
+          ]
+        }
+      ]
+    },
+    {
+      "cell_type": "code",
+      "source": [
+        "# Read the PDF\n",
+        "file_name = \"/content/reasearch and collection of data.pdf\"\n",
+        "doc = fitz.open(file_name, filetype=\"pdf\")"
+      ],
+      "metadata": {
+        "id": "dUT5AuSKC4RE"
+      },
+      "execution_count": 11,
+      "outputs": []
+    },
+    {
+      "cell_type": "code",
+      "source": [
+        "def xml_parser(xml):\n",
+        "\n",
+        "    ''' This function takes a pdf page read as xml and extracts text from it.\n",
+        "    It stores the text in the form of nested dictionaries where each key:value pair\n",
+        "    in the outer dictionary is font name:dictionary of font sizes.\n",
+        "    The inner dictionary contains key:value pairs of font_size:text '''\n",
+        "\n",
+        "    font_blocks = {}\n",
+        "    for block in xml.findall('block'):\n",
+        "        for line in block.findall('line'):\n",
+        "            for font in line.findall('font'):\n",
+        "\n",
+        "                if font_blocks.get(font.get('name'),\"NA\") == \"NA\":\n",
+        "                    font_blocks[font.get('name')] = {}\n",
+        "\n",
+        "                if font_blocks[font.get('name')].get(font.get('size'),\"NA\") == \"NA\":\n",
+        "                    font_blocks[font.get('name')][font.get('size')] = ''\n",
+        "\n",
+        "                font_blocks[font.get('name')][font.get('size')] = \\\n",
+        "                font_blocks[font.get('name')][font.get('size')] + \" \"\n",
+        "                for char in font.findall('char'):\n",
+        "                    try:\n",
+        "                        font_blocks[font.get('name')][font.get('size')] = font_blocks[font.get('name')][font.get('size')] + char.get('c')\n",
+        "                    except Exception as e:\n",
+        "                        pass\n",
+        "    return font_blocks\n",
+        "\n",
+        "def get_paper_text(paper_dictionary):\n",
+        "    ''' This function takes a list of nested dictionaries from xml_parser,\n",
+        "    and compiles them into one dictionary so that all pages of the PDF are compiled\n",
+        "    into one nested dictionary. '''\n",
+        "\n",
+        "    fonts = {}\n",
+        "    for page in paper_dictionary:\n",
+        "        for font in page:\n",
+        "            #print(page[font])\n",
+        "            if fonts.get(font,\"NA\") == \"NA\":\n",
+        "                fonts[font] = {}\n",
+        "            for size in page[font]:\n",
+        "                if fonts[font].get(size,\"NA\") == \"NA\":\n",
+        "                    fonts[font][size] = ''\n",
+        "                try:\n",
+        "                    fonts[font][size] = fonts[font][size] + page[font][size]\n",
+        "                except Exception as e:\n",
+        "                    print(e)\n",
+        "    return fonts\n",
+        "\n",
+        "def get_main_body(dict_):\n",
+        "\n",
+        "    ''' This function takes the output from get_paper_text and finds the longest\n",
+        "    text in it. This is the actual content of the research paper with footnotes,\n",
+        "    references, page numbers, titles, etc. removed '''\n",
+        "\n",
+        "    max_ = 0\n",
+        "    for font in dict_:\n",
+        "        for size in dict_[font]:\n",
+        "            if len(dict_[font][size]) > max_:\n",
+        "                max_ = len(dict_[font][size])\n",
+        "\n",
+        "    for font in dict_:\n",
+        "        for size in dict_[font]:\n",
+        "            if len(dict_[font][size]) == max_:\n",
+        "                return dict_[font][size]\n",
+        ""
+      ],
+      "metadata": {
+        "id": "CWq0yIZCDD7D"
+      },
+      "execution_count": 12,
+      "outputs": []
+    },
+    {
+      "cell_type": "code",
+      "source": [
+        "# Call xml_parser on each page and store the content of each page in the form\n",
+        "# of nested dictionaries in a list\n",
+        "entire_doc = []\n",
+        "for page in doc:\n",
+        "    xml = page.get_text(\"xml\")\n",
+        "    text_ = ET.fromstring(xml)\n",
+        "    entire_doc.append(xml_parser(text_))"
+      ],
+      "metadata": {
+        "id": "3ztb1c0rDGFq"
+      },
+      "execution_count": 13,
+      "outputs": []
+    },
+    {
+      "cell_type": "code",
+      "source": [
+        "# paper2 now holds the main body (content) of the research paper.\n",
+        "paper2 = get_main_body(get_paper_text(entire_doc))"
+      ],
+      "metadata": {
+        "id": "dVigHEFrDG0m"
+      },
+      "execution_count": 14,
+      "outputs": []
+    },
+    {
+      "cell_type": "code",
+      "source": [
+        "!pip install nltk\n",
+        "import nltk\n",
+        "nltk.download('stopwords')\n",
+        "from nltk.corpus import stopwords\n",
+        "print(stopwords.words('english')[:10])  # Prints the first 10 English stopwords\n",
+        "\n",
+        "stopWords = set(stopwords.words(\"english\"))"
+      ],
+      "metadata": {
+        "colab": {
+          "base_uri": "https://localhost:8080/"
+        },
+        "id": "g3xv3aDDDJ8Y",
+        "outputId": "919c4e64-cc39-41bb-a627-661705f29418"
+      },
+      "execution_count": 15,
+      "outputs": [
+        {
+          "output_type": "stream",
+          "name": "stdout",
+          "text": [
+            "Requirement already satisfied: nltk in /usr/local/lib/python3.10/dist-packages (3.9.1)\n",
+            "Requirement already satisfied: click in /usr/local/lib/python3.10/dist-packages (from nltk) (8.1.7)\n",
+            "Requirement already satisfied: joblib in /usr/local/lib/python3.10/dist-packages (from nltk) (1.4.2)\n",
+            "Requirement already satisfied: regex>=2021.8.3 in /usr/local/lib/python3.10/dist-packages (from nltk) (2024.9.11)\n",
+            "Requirement already satisfied: tqdm in /usr/local/lib/python3.10/dist-packages (from nltk) (4.66.6)\n",
+            "['i', 'me', 'my', 'myself', 'we', 'our', 'ours', 'ourselves', 'you', \"you're\"]\n"
+          ]
+        },
+        {
+          "output_type": "stream",
+          "name": "stderr",
+          "text": [
+            "[nltk_data] Downloading package stopwords to /root/nltk_data...\n",
+            "[nltk_data]   Unzipping corpora/stopwords.zip.\n"
+          ]
+        }
+      ]
+    },
+    {
+      "cell_type": "code",
+      "source": [
+        "import nltk\n",
+        "nltk.download('punkt_tab')\n",
+        "from nltk.tokenize import word_tokenize,sent_tokenize\n",
+        "print(nltk.data.find(\"tokenizers/punkt_tab\"))\n",
+        "nltk.download('punkt')\n",
+        "\n",
+        "text = \"This is a sample sentence to test tokenization.\"\n",
+        "tokens = word_tokenize(text)\n",
+        "print(tokens)\n",
+        "\n",
+        "''' Tokenize words, remove stopwords, and store them\n",
+        "in a dictionary along with their frequency '''\n",
+        "words = word_tokenize(paper2)\n",
+        "freqTable = dict()\n",
+        "for word in words:\n",
+        "    word = word.lower()\n",
+        "    if word in stopWords:\n",
+        "        continue\n",
+        "    if word in freqTable:\n",
+        "        freqTable[word] += 1\n",
+        "    else:\n",
+        "        freqTable[word] = 1"
+      ],
+      "metadata": {
+        "colab": {
+          "base_uri": "https://localhost:8080/"
+        },
+        "id": "QhiSEnbeDKhV",
+        "outputId": "0b8abc19-e01f-413a-8235-a4fa8770e884"
+      },
+      "execution_count": 17,
+      "outputs": [
+        {
+          "output_type": "stream",
+          "name": "stderr",
+          "text": [
+            "[nltk_data] Downloading package punkt_tab to /root/nltk_data...\n",
+            "[nltk_data]   Package punkt_tab is already up-to-date!\n",
+            "[nltk_data] Downloading package punkt to /root/nltk_data...\n"
+          ]
+        },
+        {
+          "output_type": "stream",
+          "name": "stdout",
+          "text": [
+            "/root/nltk_data/tokenizers/punkt_tab\n"
+          ]
+        },
+        {
+          "output_type": "stream",
+          "name": "stderr",
+          "text": [
+            "[nltk_data]   Unzipping tokenizers/punkt.zip.\n"
+          ]
+        },
+        {
+          "output_type": "stream",
+          "name": "stdout",
+          "text": [
+            "['This', 'is', 'a', 'sample', 'sentence', 'to', 'test', 'tokenization', '.']\n"
+          ]
+        }
+      ]
+    },
+    {
+      "cell_type": "code",
+      "source": [
+        "''' Tokenize the sentences then stores them in a dictionary against their value.\n",
+        "Value is greater if the sentence includes more important words (more frequent words). '''\n",
+        "\n",
+        "sentences = sent_tokenize(paper2)\n",
+        "sentenceValue = dict()\n",
+        "\n",
+        "for sentence in sentences:\n",
+        "    for word, freq in freqTable.items():\n",
+        "        if word in sentence.lower():\n",
+        "            if word in sentence.lower():\n",
+        "                if sentence in sentenceValue:\n",
+        "                    sentenceValue[sentence] += freq\n",
+        "                else:\n",
+        "                    sentenceValue[sentence] = freq"
+      ],
+      "metadata": {
+        "id": "YJv8bg3EDMd1"
+      },
+      "execution_count": 18,
+      "outputs": []
+    },
+    {
+      "cell_type": "code",
+      "source": [
+        "''' The average sentence value is calculated '''\n",
+        "sumValues = 0\n",
+        "for sentence in sentenceValue:\n",
+        "    sumValues += sentenceValue[sentence]\n",
+        "\n",
+        "average = int(sumValues / len(sentenceValue))"
+      ],
+      "metadata": {
+        "id": "vnilgbM-DOby"
+      },
+      "execution_count": 19,
+      "outputs": []
+    },
+    {
+      "cell_type": "code",
+      "source": [
+        "''' Each sentence's value is compared to the average sentence value.\n",
+        "If it's value is greater than > 1.2*average, it is considered important enough\n",
+        "to be in the summary '''\n",
+        "summary = ''\n",
+        "\n",
+        "for sentence in sentences:\n",
+        "    if (sentence in sentenceValue) and (sentenceValue[sentence] > (1.2 * average)):\n",
+        "        summary += \" \" + sentence"
+      ],
+      "metadata": {
+        "id": "HoNtfv7tDWBi"
+      },
+      "execution_count": 20,
+      "outputs": []
+    },
+    {
+      "cell_type": "code",
+      "source": [
+        "# def floored_percentage(val, digits):\n",
+        "#     val *= 10 ** (digits + 2)\n",
+        "#     return '{1:.{0}f}%'.format(digits, floor(val) / 10 ** digits)\n",
+        "\n",
+        "# print(\"Length of the paper has been reduced by \" \\\n",
+        "#       + floored_percentage(((len(paper2)-len(summary))/len(paper2)),2))"
+      ],
+      "metadata": {
+        "id": "iGQqsO8QDYNc"
+      },
+      "execution_count": 26,
+      "outputs": []
+    },
+    {
+      "cell_type": "code",
+      "source": [
+        "print(summary)"
+      ],
+      "metadata": {
+        "colab": {
+          "base_uri": "https://localhost:8080/"
+        },
+        "id": "FRhnGzkDDbMT",
+        "outputId": "42cb83d1-df91-4ebe-87e8-019047cd1c09"
+      },
+      "execution_count": 27,
+      "outputs": [
+        {
+          "output_type": "stream",
+          "name": "stdout",
+          "text": [
+            " These keywords include phrases like \"California construction  news,\" \"tender opportunities,\" \"infrastructure development,\" and \"construction projects.\" I start by searching well-known search engines like Google, then I go through the  first few pages of search results to find official websites, industry forums, news stories, and  curated lists with details about California building projects and tenders. : To supplement my efforts in data sourcing, I make use of  sophisticated language models like Merlin, BlackBox, and OpenAI's GPT models. : Throughout the research project, thorough records are kept of  all discoveries, search tactics, query results, assessments of data sources, and reasons for  selection. In summary, the approach developed to find trustworthy sources of information about building  and infrastructure projects in California combines the strengths of sophisticated language models  with traditional web research techniques. Following this process makes it easier to get accurate  and pertinent information on construction projects and tenders in California, which helps people  make educated decisions and accelerates project success.\n"
+          ]
+        }
+      ]
+    },
+    {
+      "cell_type": "code",
+      "source": [
+        "language = 'en'\n",
+        "myobj = gTTS(text=summary, lang=language, slow=False)"
+      ],
+      "metadata": {
+        "id": "4VzqD58ODb-u"
+      },
+      "execution_count": 23,
+      "outputs": []
+    },
+    {
+      "cell_type": "code",
+      "source": [
+        "myobj.save(\"paper1.mp3\")"
+      ],
+      "metadata": {
+        "id": "nmiAM9c-DejX"
+      },
+      "execution_count": 24,
+      "outputs": []
+    },
+    {
+      "cell_type": "code",
+      "source": [
+        "os.system(\"paper1.mp3\")"
+      ],
+      "metadata": {
+        "colab": {
+          "base_uri": "https://localhost:8080/"
+        },
+        "id": "6-5k368SDgYK",
+        "outputId": "8d38d643-e673-42af-9bb5-458f9a3cbc99"
+      },
+      "execution_count": 25,
+      "outputs": [
+        {
+          "output_type": "execute_result",
+          "data": {
+            "text/plain": [
+              "32512"
+            ]
+          },
+          "metadata": {},
+          "execution_count": 25
+        }
+      ]
+    },
+    {
+      "cell_type": "code",
+      "source": [],
+      "metadata": {
+        "id": "Ftv-LQ0YGuiI"
+      },
+      "execution_count": 25,
+      "outputs": []
+    }
+  ]
+}
